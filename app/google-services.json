@@ -1,26 +1,44 @@
 {
   "project_info": {
-    "project_number": "295533247300",
-    "project_id": "mini-projet-2026",
-    "storage_bucket": "mini-projet-2026.firebasestorage.app"
+    "project_number": "863947382195",
+    "project_id": "projet-mobile-24d28",
+    "storage_bucket": "projet-mobile-24d28.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:295533247300:android:d584b5b3c3cb2a6ba6b511",
+        "mobilesdk_app_id": "1:863947382195:android:3dbf883cde00d551107fc6",
         "android_client_info": {
           "package_name": "com.cookmatch.app"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "863947382195-objh2en47ldbdvoj6cjthl3jn6v51ma6.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.cookmatch.app",
+            "certificate_hash": "0a2c59217005fe5f84d41e01615ea4637922a003"
+          }
+        },
+        {
+          "client_id": "863947382195-v2tee8fk3tn2f623lo08bh0hbf5sertl.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
-          "current_key": "AIzaSyC1tUko4rMB7PFBLIo84wNKq9OIvNtYhrQ"
+          "current_key": "AIzaSyBIsut-tFwzYZu3tpUiS9uz1H9qYdH1NBs"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "863947382195-v2tee8fk3tn2f623lo08bh0hbf5sertl.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

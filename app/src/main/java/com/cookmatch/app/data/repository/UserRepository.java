@@ -5,7 +5,9 @@ import androidx.lifecycle.MutableLiveData;
 import com.cookmatch.app.domain.model.User;
 import com.cookmatch.app.presentation.state.UiState;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.SetOptions;
 
 import java.util.HashMap;
 import java.util.List;
@@ -37,10 +39,10 @@ public class UserRepository {
         Map<String, Object> data = new HashMap<>();
         data.put("uid", uid);
         data.put("email", email);
-        data.put("savedRecipeIds", new java.util.ArrayList<>());
+        data.put("updatedAt", FieldValue.serverTimestamp());
 
         db.collection(USERS_COLLECTION).document(uid)
-                .set(data)
+                .set(data, SetOptions.merge())
                 .addOnSuccessListener(unused -> liveData.postValue(UiState.success(null)))
                 .addOnFailureListener(e -> liveData.postValue(UiState.error(e.getMessage())));
     }
@@ -50,8 +52,14 @@ public class UserRepository {
         String uid = currentUid();
         if (uid == null) { liveData.setValue(UiState.error("Not authenticated")); return; }
 
+        Map<String, Object> data = new HashMap<>();
+        data.put("uid", uid);
+        data.put("email", auth.getCurrentUser().getEmail());
+        data.put("savedRecipeIds", FieldValue.arrayUnion(recipeId));
+        data.put("updatedAt", FieldValue.serverTimestamp());
+
         db.collection(USERS_COLLECTION).document(uid)
-                .update("savedRecipeIds", com.google.firebase.firestore.FieldValue.arrayUnion(recipeId))
+                .set(data, SetOptions.merge())
                 .addOnSuccessListener(unused -> liveData.postValue(UiState.success(null)))
                 .addOnFailureListener(e -> liveData.postValue(UiState.error(e.getMessage())));
     }
@@ -61,8 +69,14 @@ public class UserRepository {
         String uid = currentUid();
         if (uid == null) { liveData.setValue(UiState.error("Not authenticated")); return; }
 
+        Map<String, Object> data = new HashMap<>();
+        data.put("uid", uid);
+        data.put("email", auth.getCurrentUser().getEmail());
+        data.put("savedRecipeIds", FieldValue.arrayRemove(recipeId));
+        data.put("updatedAt", FieldValue.serverTimestamp());
+
         db.collection(USERS_COLLECTION).document(uid)
-                .update("savedRecipeIds", com.google.firebase.firestore.FieldValue.arrayRemove(recipeId))
+                .set(data, SetOptions.merge())
                 .addOnSuccessListener(unused -> liveData.postValue(UiState.success(null)))
                 .addOnFailureListener(e -> liveData.postValue(UiState.error(e.getMessage())));
     }
