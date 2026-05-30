@@ -40,7 +40,7 @@ public class LoginFragment extends Fragment {
     private FragmentLoginBinding binding;
     private FirebaseAuth firebaseAuth;
     private GoogleSignInClient googleSignInClient;
-X
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,

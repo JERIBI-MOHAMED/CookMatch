@@ -1,12 +1,16 @@
 package com.cookmatch.app.ui.main.fragments;
 
+import android.net.Uri;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Patterns;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -23,6 +27,8 @@ public class MyRecipesFragment extends Fragment {
     private FragmentMyRecipesBinding binding;
     private MyRecipesViewModel viewModel;
     private MyRecipesAdapter adapter;
+    private Uri selectedImageUri;
+    private ActivityResultLauncher<String> imagePickerLauncher;
 
     @Nullable
     @Override
@@ -36,12 +42,24 @@ public class MyRecipesFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         viewModel = new ViewModelProvider(this).get(MyRecipesViewModel.class);
+        imagePickerLauncher = registerForActivityResult(
+                new ActivityResultContracts.GetContent(),
+                uri -> {
+                    if (uri == null) {
+                        return;
+                    }
+                    selectedImageUri = uri;
+                    binding.selectedImagePreview.setImageURI(uri);
+                    binding.imageUrlInput.setText("");
+                }
+        );
 
         adapter = new MyRecipesAdapter();
         binding.myRecipesRecyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
         binding.myRecipesRecyclerView.setAdapter(adapter);
 
         binding.addRecipeButton.setOnClickListener(v -> submitRecipe());
+        binding.pickImageButton.setOnClickListener(v -> imagePickerLauncher.launch("image/*"));
 
         viewModel.getRecipesState().observe(getViewLifecycleOwner(), state -> {
             if (state == null) return;
@@ -80,6 +98,7 @@ public class MyRecipesFragment extends Fragment {
 
     private void submitRecipe() {
         String title = String.valueOf(binding.titleInput.getText()).trim();
+        String imageUrl = String.valueOf(binding.imageUrlInput.getText()).trim();
         String ingredients = String.valueOf(binding.ingredientsInput.getText()).trim();
         String instructions = String.valueOf(binding.instructionsInput.getText()).trim();
 
@@ -88,13 +107,21 @@ public class MyRecipesFragment extends Fragment {
             return;
         }
 
-        viewModel.addRecipe(title, ingredients, instructions);
+        if (!TextUtils.isEmpty(imageUrl) && !Patterns.WEB_URL.matcher(imageUrl).matches()) {
+            binding.imageUrlInput.setError("Enter a valid image URL");
+            return;
+        }
+
+        viewModel.addRecipe(title, selectedImageUri, imageUrl, ingredients, instructions);
     }
 
     private void clearInputs() {
         binding.titleInput.setText("");
+        binding.imageUrlInput.setText("");
         binding.ingredientsInput.setText("");
         binding.instructionsInput.setText("");
+        selectedImageUri = null;
+        binding.selectedImagePreview.setImageResource(android.R.drawable.ic_menu_gallery);
     }
 
     @Override

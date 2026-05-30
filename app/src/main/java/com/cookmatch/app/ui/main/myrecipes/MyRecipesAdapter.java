@@ -1,12 +1,12 @@
 package com.cookmatch.app.ui.main.myrecipes;
 
 import android.view.LayoutInflater;
-import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.cookmatch.app.databinding.ItemRecipeBinding;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,28 +25,41 @@ public class MyRecipesAdapter extends RecyclerView.Adapter<MyRecipesAdapter.View
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View v = LayoutInflater.from(parent.getContext())
-                .inflate(android.R.layout.simple_list_item_2, parent, false);
-        return new ViewHolder(v);
+        ItemRecipeBinding binding = ItemRecipeBinding.inflate(
+                LayoutInflater.from(parent.getContext()),
+                parent,
+                false
+        );
+        return new ViewHolder(binding);
     }
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         Map<String, Object> item = items.get(position);
-        holder.title.setText(String.valueOf(item.getOrDefault("title", "Untitled")));
+        holder.binding.recipeTitle.setText(String.valueOf(item.getOrDefault("title", "Untitled")));
         Object ings = item.get("ingredients");
-        holder.subtitle.setText(ings != null ? ings.toString() : "");
+        holder.binding.recipeMeta.setText(ings != null ? "Ingredients: " + ings : "Ingredients: none");
+        holder.binding.recipeHint.setText("Shown on Home with your recipes");
+        holder.binding.saveBadge.setVisibility(android.view.View.GONE);
+
+        String thumbnailUrl = String.valueOf(item.getOrDefault("thumbnailUrl", ""));
+        com.bumptech.glide.Glide.with(holder.binding.recipeImage)
+                .load(thumbnailUrl)
+                .placeholder(android.R.drawable.ic_menu_gallery)
+                .error(android.R.drawable.ic_menu_report_image)
+                .centerCrop()
+                .into(holder.binding.recipeImage);
     }
 
     @Override
     public int getItemCount() { return items.size(); }
 
     static class ViewHolder extends RecyclerView.ViewHolder {
-        TextView title, subtitle;
-        ViewHolder(@NonNull View itemView) {
-            super(itemView);
-            title = itemView.findViewById(android.R.id.text1);
-            subtitle = itemView.findViewById(android.R.id.text2);
+        private final ItemRecipeBinding binding;
+
+        ViewHolder(@NonNull ItemRecipeBinding binding) {
+            super(binding.getRoot());
+            this.binding = binding;
         }
     }
 }

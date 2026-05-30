@@ -14,6 +14,9 @@ import com.cookmatch.app.data.remote.dto.MealDto;
 import com.cookmatch.app.data.remote.dto.MealResponse;
 import com.cookmatch.app.domain.model.Recipe;
 import com.cookmatch.app.presentation.state.UiState;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -33,6 +36,8 @@ public class RecipeRepository {
 
     private final RecipeApiService apiService;
     private final RecipeDatabase db;
+    private final FirebaseAuth auth = FirebaseAuth.getInstance();
+    private final FirebaseFirestore firestore = FirebaseFirestore.getInstance();
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
     private RecipeRepository(Context context) {
@@ -60,16 +65,37 @@ public class RecipeRepository {
                 if (response.isSuccessful() && response.body() != null
                         && response.body().meals != null) {
                     List<Recipe> recipes = mapDtoList(response.body().meals);
-                    cacheRecipes(recipes);
-                    liveData.postValue(UiState.success(recipes));
+                    appendMatchingUserRecipes(query, recipes, liveData);
                 } else {
-                    serveCachedRecipes(liveData, "No results found");
+                    loadOnlyUserRecipes(query, liveData, "No results found");
                 }
             }
 
             @Override
             public void onFailure(Call<MealResponse> call, Throwable t) {
-                serveCachedRecipes(liveData, "Network error: " + t.getMessage());
+                loadOnlyUserRecipes(query, liveData, "Network error: " + t.getMessage());
+            }
+        });
+    }
+
+    /** Load the home feed: user's own recipes first, then default API recipes. */
+    public void loadHomeRecipes(MutableLiveData<UiState<List<Recipe>>> liveData) {
+        liveData.setValue(UiState.loading());
+
+        apiService.searchMeals("chicken").enqueue(new Callback<MealResponse>() {
+            @Override
+            public void onResponse(Call<MealResponse> call, Response<MealResponse> response) {
+                if (response.isSuccessful() && response.body() != null
+                        && response.body().meals != null) {
+                    appendAllUserRecipes(mapDtoList(response.body().meals), liveData);
+                } else {
+                    loadOnlyUserRecipes("", liveData, "No results found");
+                }
+            }
+
+            @Override
+            public void onFailure(Call<MealResponse> call, Throwable t) {
+                loadOnlyUserRecipes("", liveData, "Network error: " + t.getMessage());
             }
         });
     }
@@ -87,6 +113,20 @@ public class RecipeRepository {
         AtomicInteger pending = new AtomicInteger(ids.size());
 
         for (String id : ids) {
+            if (isUserRecipeId(id)) {
+                firestore.collection("user_recipes")
+                        .document(id.substring("user_recipe:".length()))
+                        .get()
+                        .addOnSuccessListener(doc -> {
+                            if (doc.exists() && doc.getData() != null) {
+                                fetched.add(mapUserRecipe(doc.getId(), doc.getData()));
+                            }
+                            completeIfDone(ids, fetched, liveData, pending);
+                        })
+                        .addOnFailureListener(e -> completeIfDone(ids, fetched, liveData, pending));
+                continue;
+            }
+
             apiService.getMealById(id).enqueue(new Callback<MealResponse>() {
                 @Override
                 public void onResponse(Call<MealResponse> call, Response<MealResponse> response) {
@@ -113,6 +153,11 @@ public class RecipeRepository {
             return;
         }
 
+        if (isUserRecipeId(id)) {
+            getUserRecipeDetail(id, liveData);
+            return;
+        }
+
         liveData.setValue(UiState.loading());
         apiService.getMealById(id).enqueue(new Callback<MealResponse>() {
             @Override
@@ -131,6 +176,116 @@ public class RecipeRepository {
                 liveData.postValue(UiState.error("Detail load failed: " + t.getMessage()));
             }
         });
+    }
+
+    private void appendMatchingUserRecipes(String query,
+                                           List<Recipe> apiRecipes,
+                                           MutableLiveData<UiState<List<Recipe>>> liveData) {
+        String uid = currentUid();
+        if (uid == null) {
+            cacheRecipes(apiRecipes);
+            liveData.postValue(UiState.success(apiRecipes));
+            return;
+        }
+
+        firestore.collection("user_recipes")
+                .whereEqualTo("createdBy", uid)
+                .get()
+                .addOnSuccessListener(snapshot -> {
+                    List<Recipe> combined = new ArrayList<>(apiRecipes);
+                    for (QueryDocumentSnapshot doc : snapshot) {
+                        Recipe recipe = mapUserRecipe(doc.getId(), doc.getData());
+                        if (matchesQuery(recipe, query)) {
+                            combined.add(0, recipe);
+                        }
+                    }
+                    cacheRecipes(apiRecipes);
+                    if (combined.isEmpty()) {
+                        liveData.postValue(UiState.empty());
+                    } else {
+                        liveData.postValue(UiState.success(combined));
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    cacheRecipes(apiRecipes);
+                    liveData.postValue(UiState.success(apiRecipes));
+                });
+    }
+
+    private void appendAllUserRecipes(List<Recipe> apiRecipes,
+                                      MutableLiveData<UiState<List<Recipe>>> liveData) {
+        String uid = currentUid();
+        if (uid == null) {
+            cacheRecipes(apiRecipes);
+            liveData.postValue(UiState.success(apiRecipes));
+            return;
+        }
+
+        firestore.collection("user_recipes")
+                .whereEqualTo("createdBy", uid)
+                .get()
+                .addOnSuccessListener(snapshot -> {
+                    List<Recipe> combined = new ArrayList<>(apiRecipes);
+                    for (QueryDocumentSnapshot doc : snapshot) {
+                        combined.add(0, mapUserRecipe(doc.getId(), doc.getData()));
+                    }
+                    cacheRecipes(apiRecipes);
+                    if (combined.isEmpty()) {
+                        liveData.postValue(UiState.empty());
+                    } else {
+                        liveData.postValue(UiState.success(combined));
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    cacheRecipes(apiRecipes);
+                    liveData.postValue(UiState.success(apiRecipes));
+                });
+    }
+
+    private void loadOnlyUserRecipes(String query,
+                                     MutableLiveData<UiState<List<Recipe>>> liveData,
+                                     String fallbackMessage) {
+        String uid = currentUid();
+        if (uid == null) {
+            serveCachedRecipes(liveData, fallbackMessage);
+            return;
+        }
+
+        firestore.collection("user_recipes")
+                .whereEqualTo("createdBy", uid)
+                .get()
+                .addOnSuccessListener(snapshot -> {
+                    List<Recipe> recipes = new ArrayList<>();
+                    for (QueryDocumentSnapshot doc : snapshot) {
+                        Recipe recipe = mapUserRecipe(doc.getId(), doc.getData());
+                        if (matchesQuery(recipe, query)) {
+                            recipes.add(recipe);
+                        }
+                    }
+                    if (recipes.isEmpty()) {
+                        serveCachedRecipes(liveData, fallbackMessage);
+                    } else {
+                        liveData.postValue(UiState.success(recipes));
+                    }
+                })
+                .addOnFailureListener(e -> serveCachedRecipes(liveData, fallbackMessage));
+    }
+
+    private void getUserRecipeDetail(String id, MutableLiveData<UiState<Recipe>> liveData) {
+        String docId = id.substring("user_recipe:".length());
+        liveData.setValue(UiState.loading());
+
+        firestore.collection("user_recipes")
+                .document(docId)
+                .get()
+                .addOnSuccessListener(doc -> {
+                    if (doc.exists() && doc.getData() != null) {
+                        liveData.postValue(UiState.success(mapUserRecipe(doc.getId(), doc.getData())));
+                    } else {
+                        liveData.postValue(UiState.error("Recipe details not found"));
+                    }
+                })
+                .addOnFailureListener(e -> liveData.postValue(UiState.error(e.getMessage())));
     }
 
     private void completeIfDone(List<String> ids,
@@ -216,6 +371,49 @@ public class RecipeRepository {
             list.add(new Recipe(dto.id, dto.title, dto.category, dto.thumbnailUrl));
         }
         return list;
+    }
+
+    private Recipe mapUserRecipe(String docId, Map<String, Object> data) {
+        String title = String.valueOf(data.getOrDefault("title", "Untitled"));
+        String instructions = String.valueOf(data.getOrDefault("instructions", ""));
+        String thumbnailUrl = String.valueOf(data.getOrDefault("thumbnailUrl", ""));
+        if (thumbnailUrl.isEmpty()) {
+            thumbnailUrl = String.valueOf(data.getOrDefault("imageUrl", ""));
+        }
+        List<String> ingredients = new ArrayList<>();
+        Object rawIngredients = data.get("ingredients");
+        if (rawIngredients instanceof List<?>) {
+            for (Object item : (List<?>) rawIngredients) {
+                String ingredient = String.valueOf(item).trim();
+                if (!ingredient.isEmpty()) {
+                    ingredients.add(ingredient);
+                }
+            }
+        }
+
+        return new Recipe(
+                "user_recipe:" + docId,
+                title,
+                "My Recipe",
+                thumbnailUrl,
+                instructions,
+                ingredients
+        );
+    }
+
+    private boolean matchesQuery(Recipe recipe, String query) {
+        if (query == null || query.trim().isEmpty()) {
+            return true;
+        }
+        return recipe.getTitle().toLowerCase().contains(query.trim().toLowerCase());
+    }
+
+    private boolean isUserRecipeId(String id) {
+        return id.startsWith("user_recipe:");
+    }
+
+    private String currentUid() {
+        return auth.getCurrentUser() != null ? auth.getCurrentUser().getUid() : null;
     }
 
     private Recipe mapDetailDto(MealDto dto) {

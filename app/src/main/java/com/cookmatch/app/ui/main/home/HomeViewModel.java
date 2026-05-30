@@ -33,6 +33,6 @@ public class HomeViewModel extends AndroidViewModel {
 
     /** Load trending results on first open. */
     public void loadDefault() {
-        loadRecipes("chicken");
+        repository.loadHomeRecipes(recipesState);
     }
 }

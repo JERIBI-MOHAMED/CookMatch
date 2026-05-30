@@ -79,6 +79,13 @@ public class RecipeDetailFragment extends Fragment {
             if (state.getStatus() == UiState.Status.SUCCESS && state.getData() != null) {
                 com.cookmatch.app.domain.model.Recipe recipe = state.getData();
 
+                com.bumptech.glide.Glide.with(this)
+                        .load(recipe.getThumbnailUrl())
+                        .placeholder(android.R.drawable.ic_menu_gallery)
+                        .error(android.R.drawable.ic_menu_report_image)
+                        .centerCrop()
+                        .into(binding.recipeImage);
+
                 if (recipe.getInstructions() != null && !recipe.getInstructions().isEmpty()) {
                     binding.recipeInstructions.setText(recipe.getInstructions());
                 }
