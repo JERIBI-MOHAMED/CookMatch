@@ -1,0 +1,13 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <style name="Theme.CookMatch" parent="Theme.Material3.Light.NoActionBar">
+        <item name="colorPrimary">@color/brand_orange</item>
+        <item name="colorOnPrimary">@android:color/white</item>
+        <item name="colorSecondary">@color/brand_yellow</item>
+        <item name="colorOnSecondary">@color/on_brand_dark</item>
+        <item name="colorTertiary">@color/brand_purple</item>
+        <item name="colorOnTertiary">@android:color/white</item>
+        <item name="colorSurface">@color/surface_warm</item>
+        <item name="android:windowBackground">@color/surface_warm</item>
+        <item name="android:statusBarColor">@color/brand_purple</item>
+    </style>
+</resources>

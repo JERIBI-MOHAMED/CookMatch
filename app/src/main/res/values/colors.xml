@@ -1,0 +1,9 @@
+<resources>
+    <color name="seed">#F08A24</color>
+    <color name="brand_orange">#F08A24</color>
+    <color name="brand_yellow">#FFD166</color>
+    <color name="brand_purple">#5E60CE</color>
+    <color name="brand_blue">#4EA8DE</color>
+    <color name="surface_warm">#FFF8EF</color>
+    <color name="on_brand_dark">#1F2933</color>
+</resources>

@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/main_nav_graph"
+    app:startDestination="@id/homeFragment">
+
+    <fragment
+        android:id="@+id/homeFragment"
+        android:name="com.cookmatch.app.ui.main.fragments.HomeFragment"
+        android:label="Home" />
+
+    <fragment
+        android:id="@+id/searchFragment"
+        android:name="com.cookmatch.app.ui.main.fragments.SearchFragment"
+        android:label="Search" />
+
+    <fragment
+        android:id="@+id/scannerFragment"
+        android:name="com.cookmatch.app.ui.main.fragments.ScannerFragment"
+        android:label="Scanner" />
+
+    <fragment
+        android:id="@+id/myListFragment"
+        android:name="com.cookmatch.app.ui.main.fragments.MyListFragment"
+        android:label="My List" />
+
+    <fragment
+        android:id="@+id/profileFragment"
+        android:name="com.cookmatch.app.ui.main.fragments.ProfileFragment"
+        android:label="Profile" />
+
+    <fragment
+        android:id="@+id/savedRecipesFragment"
+        android:name="com.cookmatch.app.ui.main.fragments.SavedRecipesFragment"
+        android:label="Saved Recipes" />
+
+    <fragment
+        android:id="@+id/myRecipesFragment"
+        android:name="com.cookmatch.app.ui.main.fragments.MyRecipesFragment"
+        android:label="My Recipes" />
+
+    <fragment
+        android:id="@+id/settingsFragment"
+        android:name="com.cookmatch.app.ui.main.fragments.SettingsFragment"
+        android:label="Settings" />
+
+    <fragment
+        android:id="@+id/communityFragment"
+        android:name="com.cookmatch.app.ui.main.fragments.CommunityFragment"
+        android:label="Community" />
+
+    <fragment
+        android:id="@+id/recipeDetailFragment"
+        android:name="com.cookmatch.app.ui.main.fragments.RecipeDetailFragment"
+        android:label="Recipe Detail">
+        <argument android:name="recipeId" android:defaultValue="" app:argType="string" />
+        <argument android:name="recipeTitle" android:defaultValue="" app:argType="string" />
+        <argument android:name="recipeCategory" android:defaultValue="" app:argType="string" />
+        <argument android:name="recipeThumbnail" android:defaultValue="" app:argType="string" />
+        <deepLink app:uri="cookmatch://recipe/{recipeId}" />
+    </fragment>
+
+</navigation>

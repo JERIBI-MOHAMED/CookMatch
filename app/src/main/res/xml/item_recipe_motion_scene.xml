@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<MotionScene xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:motion="http://schemas.android.com/apk/res-auto">
+
+    <Transition
+        motion:constraintSetEnd="@+id/pressed"
+        motion:constraintSetStart="@+id/normal"
+        motion:duration="100">
+        <OnClick
+            motion:targetId="@+id/recipeCard"
+            motion:clickAction="toggle" />
+    </Transition>
+
+    <ConstraintSet android:id="@+id/normal">
+        <Constraint android:id="@+id/recipeCard">
+            <CustomAttribute
+                motion:attributeName="cardElevation"
+                motion:customFloatValue="4" />
+            <Transform
+                android:scaleX="1.0"
+                android:scaleY="1.0" />
+            <Layout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                motion:layout_constraintEnd_toEndOf="parent"
+                motion:layout_constraintStart_toStartOf="parent"
+                motion:layout_constraintTop_toTopOf="parent" />
+        </Constraint>
+    </ConstraintSet>
+
+    <ConstraintSet android:id="@+id/pressed">
+        <Constraint android:id="@+id/recipeCard">
+            <CustomAttribute
+                motion:attributeName="cardElevation"
+                motion:customFloatValue="12" />
+            <Transform
+                android:scaleX="0.97"
+                android:scaleY="0.97" />
+            <Layout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                motion:layout_constraintEnd_toEndOf="parent"
+                motion:layout_constraintStart_toStartOf="parent"
+                motion:layout_constraintTop_toTopOf="parent" />
+        </Constraint>
+    </ConstraintSet>
+
+</MotionScene>

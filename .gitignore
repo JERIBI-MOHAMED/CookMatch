@@ -1,0 +1,48 @@
+# Gradle
+.gradle/
+build/
+**/build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# Generated APK/AAB
+*.apk
+*.aab
+*.ap_
+
+# Dex/Java/Kotlin artifacts
+*.dex
+*.class
+*.jar
+
+# Native build folders
+.externalNativeBuild/
+.cxx/
+
+# Android captures
+captures/
+
+# Local config
+local.properties
+
+# Signing keys / secrets
+*.jks
+*.keystore
+*.p12
+*.pem
+*.key
+
+# NDK
+obj/
+
+# Android Studio
+.idea/
+*.iml
+.navigation/
+.vscode/
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "295533247300",
+    "project_id": "mini-projet-2026",
+    "storage_bucket": "mini-projet-2026.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:295533247300:android:d584b5b3c3cb2a6ba6b511",
+        "android_client_info": {
+          "package_name": "com.cookmatch.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC1tUko4rMB7PFBLIo84wNKq9OIvNtYhrQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
